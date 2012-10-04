@@ -8,6 +8,8 @@ The most common use case for Paperclip is to easily attach image files to Active
 
 I'm sure that everyone knows this, this gem just makes it easy to do.
 
+(This version has been modified from the original to support Mongoid instead of ActiveRecord.)
+
 h2. Installation
 
 Install the gem:
@@ -37,8 +39,12 @@ h2. Usage
 In your model:
 
 <pre><code>
-  class User < ActiveRecord::Base
-    has_attached_file :avatar, :styles => { :medium => "300x300>", :thumb => "100x100>" }
+  class User 
+    include Mongoid::Document
+    include DelayedPaperclip::Glue
+
+    # using the mongoid-paperclip gem
+    has_mongoid_attached_file :avatar, :styles => { :medium => "300x300>", :thumb => "100x100>" }
 
     process_in_background :avatar
   end

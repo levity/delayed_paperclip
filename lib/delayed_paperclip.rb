@@ -64,13 +64,11 @@ module DelayedPaperclip
 
   module InstanceMethods
 
-    # setting each inididual NAME_processing to true, skipping the ActiveModel dirty setter
-    # Then immediately push the state to the database
     def mark_enqueue_delayed_processing
       unless @_enqued_for_processing_with_processing.blank? # catches nil and empy arrays
-        updates = @_enqued_for_processing_with_processing.collect{|n| "#{n}_processing = :true" }.join(", ")
-        updates = ActiveRecord::Base.send(:sanitize_sql_array, [updates, {:true => true}])
-        self.class.update_all(updates, "id = #{self.id}")
+        @_enqued_for_processing_with_processing.each do |n|
+          set "#{n}_processing", true
+        end
       end
     end
 
@@ -86,15 +84,13 @@ module DelayedPaperclip
     end
 
     def enqueue_post_processing_for name
-      DelayedPaperclip.enqueue(self.class.name, read_attribute(:id), name.to_sym)
+      DelayedPaperclip.enqueue(self.class.name, read_attribute(:_id), name.to_sym)
     end
 
     def prepare_enqueueing_for name
-      if self.attributes.has_key? "#{name}_processing"
-        write_attribute("#{name}_processing", true)
-        @_enqued_for_processing_with_processing ||= []
-        @_enqued_for_processing_with_processing << name
-      end
+      write_attribute("#{name}_processing", true)
+      @_enqued_for_processing_with_processing ||= []
+      @_enqued_for_processing_with_processing << name
       @_enqued_for_processing ||= []
       @_enqued_for_processing << name
     end

@@ -33,7 +33,7 @@ module DelayedPaperclip
       end
 
       def processing?
-        @instance.send(:"#{@name}_processing?")
+        @instance.read_attribute "#{@name}_processing"
       end
 
       def process_delayed!
@@ -47,12 +47,7 @@ module DelayedPaperclip
 
       def post_process_styles_with_processing(*args)
         post_process_styles_without_processing(*args)
-
-        if instance.respond_to?(:"#{name}_processing?")
-          instance.send("#{name}_processing=", false)
-
-          instance.class.update_all({ "#{name}_processing" => false, "#{name}_updated_at" => Time.at(self.updated_at) }, instance.class.primary_key => instance.id)
-        end
+        instance.set "#{name}_processing", false
       end
 
       def save_with_prepare_enqueueing
@@ -65,7 +60,7 @@ module DelayedPaperclip
       end
 
       def delayed_default_url?
-        !(job_is_processing || dirty? || !delayed_options.try(:[], :url_with_processing) || !(@instance.respond_to?(:"#{name}_processing?") && processing?))
+        !(job_is_processing || dirty? || !delayed_options.try(:[], :url_with_processing) || !processing?)
       end
 
     end
